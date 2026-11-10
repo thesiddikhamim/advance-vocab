@@ -1,0 +1,733 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Word Upgrade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ffffff; --surface:#ffffff; --ink:#4b4b4b; --ink-strong:#3c3c3c; --muted:#8e8e8e; --line:#e5e5e5; --line-d:#cfcfcf;
+  --green:#58cc02; --green-d:#58a700; --green-bg:#d7ffb8; --green-t:#46a302;
+  --blue:#1cb0f6; --blue-d:#1899d6; --blue-bg:#ddf4ff;
+  --red:#ff4b4b; --red-d:#ea2b2b; --red-bg:#ffdfe0;
+  --orange:#ff9600; --orange-d:#e08700; --orange-bg:#fff0d0;
+  --yellow:#ffc800; --yellow-d:#e5b400;
+  --purple:#ce82ff; --purple-d:#a568cc;
+  --off:#e5e5e5; --off-t:#afafaf;
+  --font:Nunito,"Segoe UI",system-ui,-apple-system,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#131f24; --surface:#131f24; --ink:#dce6ec; --ink-strong:#f1f7fb; --muted:#7b8f98; --line:#37464f; --line-d:#4a5b64;
+    --green-bg:#24380f; --green-t:#7ddc2a;
+    --blue-bg:#14323f; --red-bg:#3d1f21; --orange-bg:#3d2d10;
+    --off:#37464f; --off-t:#5b6d76;
+  }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:700 16px/1.5 var(--font)}
+button{font:inherit;color:inherit}
+.app{max-width:600px;margin:0 auto;padding:0 16px 110px;overflow-x:clip}
+svg.lucide{width:1em;height:1em}
+
+/* chunky buttons */
+.btn3d{--c:var(--green);--cd:var(--green-d);--ct:#fff;display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;background:var(--c);color:var(--ct);
+  border-radius:16px;padding:14px 22px;font-weight:900;font-size:15px;letter-spacing:.07em;text-transform:uppercase;cursor:pointer;
+  box-shadow:0 4px 0 var(--cd);transition:transform .06s,box-shadow .06s;min-height:50px}
+.btn3d:active{transform:translateY(4px);box-shadow:0 0 0 var(--cd)}
+.btn3d svg{width:18px;height:18px}
+.btn3d.blue{--c:var(--blue);--cd:var(--blue-d)}
+.btn3d.red{--c:var(--red);--cd:var(--red-d)}
+.btn3d.orange{--c:var(--orange);--cd:var(--orange-d)}
+.btn3d.ghost{--c:var(--surface);--cd:var(--line);--ct:var(--blue);border:2px solid var(--line);padding:12px 20px}
+.btn3d.ghost.gray{--ct:var(--muted)}
+.btn3d[disabled]{--c:var(--off);--cd:var(--off);--ct:var(--off-t);cursor:not-allowed;box-shadow:none;transform:none;border-color:transparent}
+.btn3d.block{width:100%}
+.icon-btn{background:none;border:0;color:var(--muted);width:42px;height:42px;border-radius:12px;display:grid;place-items:center;cursor:pointer;font-size:22px}
+.icon-btn:hover{background:var(--line)}
+
+/* top bar */
+header.top{position:sticky;top:0;z-index:5;background:var(--bg);display:flex;align-items:center;justify-content:space-between;padding:14px 0 10px;border-bottom:2px solid var(--line);margin:0 -16px 18px;padding-left:16px;padding-right:12px}
+.stats{display:flex;gap:16px;align-items:center}
+.stat{display:flex;align-items:center;gap:6px;font-weight:900;font-size:17px}
+.stat svg{width:24px;height:24px;fill:currentColor}
+.stat.streak{color:var(--orange)}.stat.xp{color:var(--yellow-d)}.stat.lvl{color:var(--purple-d)}
+.stat.off{color:var(--off-t)}
+.top .tools{display:flex}
+
+/* goal card */
+.goal{border:2px solid var(--line);border-radius:18px;padding:14px 16px;display:grid;gap:12px;margin-bottom:6px}
+.goal .gr{display:flex;justify-content:space-between;align-items:baseline;font-weight:800}
+.goal .gr b{color:var(--ink-strong);font-weight:900}
+.goal .gr span{color:var(--muted);font-size:14px}
+.bar{height:16px;background:var(--line);border-radius:99px;overflow:hidden}
+.bar>i{display:block;height:100%;border-radius:99px;background:var(--yellow);position:relative;transition:width .5s}
+.bar>i::after{content:"";position:absolute;left:8px;right:8px;top:4px;height:4px;border-radius:99px;background:rgba(255,255,255,.35)}
+.bar.green>i{background:var(--green)}.bar.purple>i{background:var(--purple)}
+
+/* path */
+.unit{border-radius:16px;padding:14px 16px;margin:26px 0 10px;color:#fff;background:var(--c);box-shadow:0 4px 0 var(--cd);display:flex;justify-content:space-between;align-items:center;gap:12px;--c:var(--green);--cd:var(--green-d)}
+.unit.DU{--c:var(--blue);--cd:var(--blue-d)}
+.unit.Private{--c:var(--purple);--cd:var(--purple-d)}
+.unit.Mine{--c:var(--orange);--cd:var(--orange-d)}
+.unit small{display:block;font-weight:800;opacity:.85;letter-spacing:.06em;text-transform:uppercase;font-size:12px}
+.unit h2{margin:0;font-size:19px;font-weight:900}
+.unit .cnt{font-weight:900;font-size:14px;background:rgba(0,0,0,.15);padding:4px 10px;border-radius:99px;white-space:nowrap}
+.node{display:flex;flex-direction:column;align-items:center;margin:20px 0 6px;transform:translateX(var(--x,0));position:relative}
+.circle{--c:var(--green);--cd:var(--green-d);width:80px;height:72px;border-radius:50%;border:0;background:var(--c);color:#fff;font-size:34px;display:grid;place-items:center;cursor:pointer;
+  box-shadow:0 8px 0 var(--cd);transition:transform .08s,box-shadow .08s;position:relative}
+.circle:active{transform:translateY(6px);box-shadow:0 2px 0 var(--cd)}
+.circle svg{width:34px;height:34px;fill:currentColor}
+.circle.done{--c:var(--yellow);--cd:var(--yellow-d)}
+.circle.add{--c:var(--surface);--cd:var(--line);color:var(--muted);border:2px dashed var(--line-d)}
+.circle.add svg{fill:none}
+.node .lbl{margin-top:16px;text-align:center;font-weight:900;color:var(--ink-strong);max-width:230px;line-height:1.25}
+.node .stars{display:flex;gap:3px;margin-top:6px;color:var(--off-t)}
+.node .stars svg{width:16px;height:16px;fill:currentColor}
+.node .stars .on{color:var(--yellow)}
+.node .rm{margin-top:2px;font-size:16px;width:34px;height:34px}
+.bubble{position:absolute;top:-44px;background:var(--surface);color:var(--green-t);border:2px solid var(--line);border-radius:14px;padding:5px 14px;font-weight:900;letter-spacing:.06em;animation:bob 1.2s ease-in-out infinite;pointer-events:none}
+.bubble::after{content:"";position:absolute;left:50%;bottom:-9px;width:14px;height:14px;background:var(--surface);border:2px solid var(--line);border-top:0;border-left:0;transform:translateX(-50%) rotate(45deg)}
+@keyframes bob{50%{transform:translateY(-6px)}}
+.hint{color:var(--muted);text-align:center;margin:30px 0 0;font-size:14px}
+
+/* lesson */
+.lesson-wrap{position:fixed;inset:0;z-index:20;background:var(--bg);display:flex;flex-direction:column}
+.lesson-wrap[hidden]{display:none}
+.l-top{display:flex;align-items:center;gap:14px;padding:16px;max-width:760px;width:100%;margin:0 auto}
+.l-top .pbar{flex:1}
+.hearts{display:flex;align-items:center;gap:5px;color:var(--red);font-weight:900;font-size:18px}
+.hearts svg{width:26px;height:26px;fill:currentColor}
+.l-body{flex:1;overflow-y:auto;padding:8px 16px 24px;max-width:760px;width:100%;margin:0 auto}
+.ask{font-size:24px;font-weight:900;color:var(--ink-strong);margin:8px 0 14px;line-height:1.25}
+.retry-note{display:inline-flex;gap:8px;align-items:center;background:var(--orange-bg);color:var(--orange-d);padding:6px 12px;border-radius:12px;font-size:14px;margin-bottom:12px}
+.swapline{display:flex;gap:10px;align-items:center;margin:0 0 14px;color:var(--muted);font-size:15px}
+.swapline b{background:var(--blue-bg);color:var(--blue-d);padding:4px 12px;border-radius:12px;font-size:18px;font-weight:900}
+.para-l{border:2px solid var(--line);border-radius:18px;padding:16px 18px;font-size:19px;line-height:2.1;font-weight:700;margin-bottom:16px}
+.para-l .fut{color:var(--ink)}
+.para-l .done{color:var(--green-t);background:var(--green-bg);border-radius:8px;padding:1px 7px;font-weight:800}
+.para-l .done.v-skipped{color:var(--muted);background:var(--line)}
+.para-l .done.v-weak{color:var(--orange-d);background:var(--orange-bg)}
+.para-l .done.v-incorrect{color:var(--red-d);background:var(--red-bg)}
+.para-l .cur{background:var(--blue-bg);color:var(--blue-d);border-bottom:3px solid var(--blue);border-radius:8px 8px 0 0;padding:1px 8px;font-weight:900}
+.para-l .cur.v-strong,.para-l .cur.v-acceptable{background:var(--green-bg);color:var(--green-t);border-color:var(--green)}
+.para-l .cur.v-weak{background:var(--orange-bg);color:var(--orange-d);border-color:var(--orange)}
+.para-l .cur.v-incorrect{background:var(--red-bg);color:var(--red-d);border-color:var(--red)}
+.ans{width:100%;font:800 22px var(--font);color:var(--ink-strong);background:var(--surface);border:2px solid var(--line);border-bottom-width:4px;border-radius:16px;padding:14px 16px;outline:none}
+.ans:focus{border-color:var(--blue)}
+.ans:disabled{opacity:.9}
+.ans.v-strong,.ans.v-acceptable{border-color:var(--green);background:var(--green-bg)}
+.ans.v-weak{border-color:var(--orange);background:var(--orange-bg)}
+.ans.v-incorrect{border-color:var(--red);background:var(--red-bg)}
+.errtxt{color:var(--red-d);margin:10px 2px 0;font-size:15px}
+.l-foot{border-top:2px solid var(--line);padding:16px 16px calc(16px + env(safe-area-inset-bottom));background:var(--bg)}
+.l-foot .in{max-width:760px;margin:0 auto;display:flex;justify-content:space-between;gap:12px;align-items:center}
+.l-foot .in .btn3d:last-child{flex:0 0 auto;min-width:150px}
+.l-foot.res{border-top-color:transparent}
+.l-foot.ok{background:var(--green-bg);--tone:var(--green-t)}
+.l-foot.mid{background:var(--orange-bg);--tone:var(--orange-d)}
+.l-foot.bad{background:var(--red-bg);--tone:var(--red-d)}
+.l-foot.res .in{flex-direction:column;align-items:stretch}
+.sheet{max-height:42vh;overflow-y:auto;display:flex;gap:14px;align-items:flex-start;animation:rise .25s ease-out}
+@keyframes rise{from{transform:translateY(30px);opacity:0}}
+.sheet-ic{flex:0 0 auto;width:48px;height:48px;border-radius:50%;background:var(--surface);color:var(--tone);display:grid;place-items:center;font-size:26px}
+.sheet-ic svg{width:28px;height:28px;stroke-width:3}
+.sheet h3{margin:0;font-size:22px;font-weight:900;color:var(--tone)}
+.sheet p{margin:4px 0 0;color:var(--tone);font-weight:700}
+.sheet .alts{margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;color:var(--tone);font-size:14px}
+.sheet .alts em{font-style:normal;font-weight:900;letter-spacing:.05em;text-transform:uppercase;font-size:12px}
+.sheet .alts code{font:800 14px var(--font);background:var(--surface);color:var(--tone);padding:3px 10px;border-radius:10px}
+.sheet .fixed{margin-top:8px;color:var(--tone)}
+.sheet .fixed em{font-style:normal;font-weight:900;letter-spacing:.05em;text-transform:uppercase;font-size:12px;display:block}
+.xpchip{display:inline-flex;gap:4px;align-items:center;background:var(--surface);color:var(--yellow-d);font-weight:900;padding:2px 10px;border-radius:99px;font-size:14px;margin-left:8px;vertical-align:middle}
+.xpchip svg{width:14px;height:14px;fill:currentColor}
+.spin{width:16px;height:16px;border:3px solid currentColor;border-right-color:transparent;border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+
+/* batch answer + review */
+.counter{font-weight:900;color:var(--muted);min-width:44px;text-align:right}
+.sub2{color:var(--muted);margin:-6px 0 14px;font-weight:700}
+.chip{font:inherit;font-weight:900;border:0;background:var(--blue-bg);color:var(--blue-d);border-bottom:3px dotted var(--blue);border-radius:8px 8px 0 0;padding:1px 8px;cursor:pointer;line-height:inherit}
+.chip.filled{background:var(--green-bg);color:var(--green-t);border-bottom:3px solid var(--green)}
+.chip.on{outline:3px solid var(--blue);outline-offset:1px}
+.inrow{display:grid;grid-template-columns:104px 1fr;gap:10px;align-items:center;margin-bottom:10px}
+.inrow .orig{background:var(--blue-bg);color:var(--blue-d);font-weight:900;padding:10px 8px;border-radius:12px;text-align:center;font-size:16px;overflow-wrap:anywhere}
+.rowin{width:100%;font:800 18px var(--font);color:var(--ink-strong);background:var(--surface);border:2px solid var(--line);border-bottom-width:4px;border-radius:14px;padding:10px 14px;outline:none;min-width:0}
+.rowin:focus{border-color:var(--blue)}
+.rowin:disabled{opacity:.6}
+.inrow .why{grid-column:1/-1;font-size:14px;color:var(--orange-d);margin-top:-4px;font-weight:800}
+.fbk{border:2px solid var(--line);border-left-width:6px;border-radius:14px;padding:12px 14px;margin-bottom:10px}
+.fbk.v-strong,.fbk.v-acceptable{border-left-color:var(--green)}
+.fbk.v-weak{border-left-color:var(--orange)}
+.fbk.v-incorrect{border-left-color:var(--red)}
+.fbk .h{display:flex;justify-content:space-between;gap:8px;align-items:center;font-weight:900}
+.fbk .h s{color:var(--muted);margin-right:6px}
+.fbk .h b{color:var(--ink-strong)}
+.fbk p{margin:6px 0 0}
+.fbk code{font:800 14px var(--font);background:var(--blue-bg);color:var(--blue-d);padding:2px 9px;border-radius:10px;margin-right:6px;display:inline-block}
+.fbk .lab{font-size:12px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-right:6px}
+.tally{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
+.resume{color:var(--orange-d);font-size:13px;font-weight:900;margin-top:2px}
+.xpchip.lg{font-size:16px;padding:3px 12px}
+
+/* finish */
+.fin{text-align:center;padding:18px 0 10px}
+.trophy{width:110px;height:110px;margin:0 auto 6px;border-radius:50%;background:var(--yellow);color:#fff;display:grid;place-items:center;box-shadow:0 8px 0 var(--yellow-d);animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
+.trophy svg{width:60px;height:60px;fill:currentColor}
+.trophy.sad{background:var(--red);box-shadow:0 8px 0 var(--red-d)}
+@keyframes pop{from{transform:scale(.3);opacity:0}}
+.fin h1{font-size:28px;font-weight:900;color:var(--yellow-d);margin:22px 0 4px}
+.fin h1.sad{color:var(--red-d)}
+.fin .sub{color:var(--muted);margin:0 0 6px}
+.bigstars{display:flex;justify-content:center;gap:8px;margin:10px 0 18px}
+.bigstars svg{width:44px;height:44px;fill:var(--line);color:var(--line)}
+.bigstars svg.on{fill:var(--yellow);color:var(--yellow);animation:pop .5s cubic-bezier(.2,1.6,.4,1) both}
+.bigstars span:nth-child(2) svg{animation-delay:.15s}.bigstars span:nth-child(3) svg{animation-delay:.3s}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
+.tile{border:2px solid var(--c);border-radius:16px;overflow:hidden;--c:var(--yellow)}
+.tile.g{--c:var(--green)}.tile.b{--c:var(--blue)}
+.tile .h{background:var(--c);color:#fff;font-weight:900;font-size:12px;letter-spacing:.07em;text-transform:uppercase;padding:4px 0}
+.tile .v{padding:14px 0;font-weight:900;font-size:22px;color:var(--c);display:flex;justify-content:center;align-items:center;gap:6px}
+.tile .v svg{width:22px;height:22px;fill:currentColor}
+.panel{border:2px solid var(--line);border-radius:18px;padding:14px 16px;margin-bottom:12px;text-align:left}
+.panel h4{margin:0 0 8px;font-size:13px;font-weight:900;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.panel.goalhit{border-color:var(--yellow);background:var(--orange-bg);color:var(--orange-d);font-weight:900;display:flex;gap:10px;align-items:center}
+.row{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:2px solid var(--line)}
+.row:first-of-type{border-top:0}
+.row .sw{flex:1;font-weight:800}
+.row .sw s{color:var(--muted);margin-right:6px}
+.row .sw b{color:var(--ink-strong)}
+.pill{font-size:12px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;padding:3px 9px;border-radius:99px}
+.pill.v-strong,.pill.v-acceptable{background:var(--green-bg);color:var(--green-t)}
+.pill.v-weak{background:var(--orange-bg);color:var(--orange-d)}
+.pill.v-incorrect{background:var(--red-bg);color:var(--red-d)}
+.pill.v-skipped{background:var(--line);color:var(--muted)}
+.fin-actions{display:grid;gap:10px;margin-top:16px}
+
+/* dialogs */
+dialog{border:2px solid var(--line);border-radius:22px;background:var(--surface);color:var(--ink);padding:0;width:min(520px,calc(100vw - 32px))}
+dialog::backdrop{background:rgba(0,0,0,.5)}
+.dlg{padding:22px}
+.dlg h2{margin:0 0 4px;font-size:22px;font-weight:900;color:var(--ink-strong)}
+.dlg label{display:block;font-size:13px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:16px 0 6px}
+.dlg input,.dlg select,.dlg textarea{width:100%;font:700 16px var(--font);color:var(--ink-strong);background:var(--surface);border:2px solid var(--line);border-radius:14px;padding:11px 13px}
+.dlg textarea{min-height:120px;resize:vertical}
+.dlg input:focus,.dlg select:focus,.dlg textarea:focus{outline:none;border-color:var(--blue)}
+.dlg .note{color:var(--muted);font-size:14px;margin:6px 0 0;font-weight:700}
+.dlg .foot{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+.dlg hr{border:0;border-top:2px solid var(--line);margin:22px 0 0}
+.dlg a{color:var(--blue)}
+.err{background:var(--red-bg);color:var(--red-d);padding:10px 14px;border-radius:12px;margin-top:12px;font-weight:800}
+
+/* confetti */
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:40;overflow:hidden}
+#confetti i{position:absolute;top:-16px;width:9px;height:15px;border-radius:2px;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media (max-width:420px){.ask{font-size:21px}.para-l{font-size:17px}.l-foot .in .btn3d:last-child{min-width:130px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top" id="topbar"></header>
+  <main id="view"></main>
+</div>
+<div id="lesson" class="lesson-wrap" hidden></div>
+<div id="confetti" aria-hidden="true"></div>
+
+<dialog id="dlg-settings"><form method="dialog" class="dlg" id="f-settings">
+  <h2>Settings</h2>
+  <p class="note">Your key is stored only in this browser and sent only to Google's Gemini API.</p>
+  <label for="s-key">Gemini API key</label>
+  <input id="s-key" type="password" autocomplete="off" placeholder="AIza...">
+  <p class="note">Get a free key at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>. Free-tier limits and data terms change, so check them there.</p>
+  <label for="s-model">Model</label>
+  <input id="s-model" type="text" placeholder="gemini-2.5-flash">
+  <p class="note">If a model name stops working, paste a current one from AI Studio.</p>
+  <label>Backup</label>
+  <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn3d ghost" type="button" id="b-exp">Download backup</button><button class="btn3d ghost" type="button" id="b-imp">Restore backup</button></div>
+  <p class="note">Saves XP, streak, stars, your paragraphs and upgrades (not your API key). Use it before clearing browser data or switching device.</p>
+  <input id="b-file" type="file" accept="application/json,.json" hidden>
+  <div class="foot"><button class="btn3d ghost gray" value="cancel">Cancel</button><button class="btn3d" value="save">Save</button></div>
+</form></dialog>
+
+<dialog id="dlg-new"><form method="dialog" class="dlg" id="f-new">
+  <h2>New paragraph</h2>
+  <p class="note">Generate one with Gemini, or paste your own below.</p>
+  <label for="n-topic">Topic</label>
+  <input id="n-topic" type="text" placeholder="e.g. Should private tuition be banned?">
+  <label for="n-tag">Exam style</label>
+  <select id="n-tag"><option>IELTS</option><option>DU</option><option>Private</option></select>
+  <div class="foot" style="margin-top:14px"><button class="btn3d blue" type="button" id="n-gen"><i data-lucide="sparkles"></i>Generate</button></div>
+  <hr>
+  <label for="n-title">Or paste your own: title</label>
+  <input id="n-title" type="text" placeholder="Title">
+  <label for="n-text">Text</label>
+  <textarea id="n-text" placeholder="Write a basic paragraph and wrap each word to upgrade in double brackets, like: This is a [[big]] problem."></textarea>
+  <div class="foot"><button class="btn3d ghost gray" value="cancel">Close</button><button class="btn3d ghost" type="button" id="n-save">Save pasted text</button></div>
+  <div id="n-err"></div>
+</form></dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<script>
+/* ---------- Starter passages (edit freely). Wrap words to upgrade in [[double brackets]]. ---------- */
+const PASSAGES = [
+ {id:"p1",tag:"IELTS",title:"Social media and young people",text:"Social media is a [[big]] part of life today. [[A lot of]] young people spend [[many]] hours on it every day. This can be [[bad]] because it takes time away from study and sleep. But it is also [[good]] for learning, because students can [[get]] information fast and talk to people all over the world. The [[main]] problem is not the technology, but how we use it. Parents and schools should [[help]] young people use it in a sensible way."},
+ {id:"p2",tag:"IELTS",title:"Air pollution in cities",text:"Air pollution is a [[big]] problem in [[many]] cities. Factories and old cars [[make]] the air dirty, and [[a lot of]] people get sick because of it. The government should [[make]] strict rules and [[stop]] factories from burning dirty fuel. It is also [[important]] to plant more trees, because trees [[clean]] the air. If we do not [[act]] now, the situation will get [[worse]]."},
+ {id:"p3",tag:"IELTS",title:"Online learning and inequality",text:"Online classes have become [[very popular]] in recent years. They are [[good]] because students can learn from home and save time. However, [[many]] students in villages do not have a fast internet connection or a smartphone, so they [[get]] left behind. This [[makes]] the gap between rich and poor students [[bigger]]. The government should [[give]] cheap internet and devices to poor students."},
+ {id:"p6",tag:"IELTS",title:"Exercise and health",text:"Exercise is [[very important]] for our health. People who exercise regularly [[get]] sick less often and feel [[happy]]. But today, [[many]] people sit in front of a computer all day and do not [[move]] enough. This habit can [[make]] people ill in the future. Schools and offices should [[give]] time for exercise."},
+ {id:"p9",tag:"IELTS",title:"Climate change in Bangladesh",text:"Bangladesh is [[badly]] affected by climate change. Floods and cyclones [[happen]] more often now, and many farmers [[lose]] their land and crops. Rising sea levels also [[put]] coastal people in danger. The government and rich countries should [[give]] money for flood-proof houses and strong embankments, because the poor [[suffer]] the most."},
+ {id:"p4",tag:"DU",title:"Traffic jams in Dhaka",text:"Traffic jam is a [[big]] problem in Dhaka. People [[waste]] hours on the road every day, and this [[hurts]] the economy. There are too [[many]] private cars and not enough [[good]] buses. The city needs a better public transport system. If the government [[builds]] more metro lines and [[stops]] illegal parking, the traffic will become [[better]]."},
+ {id:"p5",tag:"DU",title:"Youth unemployment",text:"Unemployment is a [[big]] problem for young graduates in Bangladesh. [[A lot of]] students finish university but cannot [[find]] a job. One reason is that their skills do not [[match]] what companies [[want]]. Universities should [[teach]] practical skills, and the government should [[help]] small businesses to [[grow]], so that more jobs can be [[made]]."},
+ {id:"p8",tag:"DU",title:"Corruption",text:"Corruption is a [[bad]] habit that [[hurts]] the whole country. When officials take bribes, public money does not [[reach]] the people who [[need]] it. It also [[makes]] honest people lose trust in the government. To [[stop]] corruption, the country needs strong laws and [[open]] government work. Citizens must also [[say no]] to bribery."},
+ {id:"p11",tag:"DU",title:"Poverty and the economy",text:"Poverty is a [[big]] challenge for developing countries. Poor families cannot [[pay for]] education or healthcare, so their children [[stay]] poor too. Cheap loans for small businesses can [[help]] these families [[get out of]] poverty. The government should also [[make]] more jobs in factories and farms, which will make the economy [[stronger]]."},
+ {id:"p7",tag:"Private",title:"Educating girls",text:"Educating girls is [[good]] for the whole society. An educated woman can [[get]] a better job, and she can also [[take care of]] her children's education. In the past, [[many]] families in Bangladesh did not [[let]] their daughters go to school. Now this is [[changing]], but the change is still [[slow]] in rural areas."},
+ {id:"p10",tag:"Private",title:"The reading habit",text:"Reading books is a [[good]] habit. It [[gives]] us new ideas and [[helps]] us learn new words. Today, [[a lot of]] students prefer phones to books, and this [[hurts]] their ability to focus. Parents should [[show]] children the joy of reading from an early age. Libraries can also [[help]] by arranging book fairs and reading clubs."},
+ {id:"p12",tag:"Private",title:"Why students choose private universities",text:"Many students choose private universities because they have [[few]] session jams and [[good]] facilities. However, the tuition fees are [[very high]], so poor students [[cannot]] afford them. The government should [[give]] more scholarships and [[check]] the quality of teaching in these universities."}
+];
+const UNITS = [
+  {key:'IELTS',name:'IELTS Writing',desc:'Task 2 essay topics'},
+  {key:'DU',name:'Dhaka University',desc:'Admission essay topics'},
+  {key:'Private',name:'Private University',desc:'Admission essay topics'},
+  {key:'Mine',name:'My paragraphs',desc:'Your own and AI-made'}
+];
+const XP_BASE = {strong:15, acceptable:10, weak:5, incorrect:0};
+const DAILY_GOAL = 50, XP_PER_LEVEL = 200, MAX_HEARTS = 3;
+
+/* ---------- Storage ---------- */
+const mem = {};
+const LS = {
+  get(k,d){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d }catch{ return k in mem?mem[k]:d } },
+  set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)) }catch{ mem[k]=v } }
+};
+const K = {settings:'wu.settings.v1', custom:'wu.custom.v1', up:'wu.upgrades.v1', game:'wu.game.v2'};
+const DEFAULT_MODEL = 'gemini-2.5-flash';
+const getSettings = () => Object.assign({key:'',model:DEFAULT_MODEL}, LS.get(K.settings,{}));
+const customList = () => LS.get(K.custom,[]);
+const allPassages = () => [...PASSAGES, ...customList()];
+const dayKey = (d=new Date()) => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const G = () => Object.assign({xp:0,streak:0,last:'',day:{},stars:{},muted:false}, LS.get(K.game,{}));
+function touchGame(addXp){
+  const g=G(), t=dayKey(), y=dayKey(new Date(Date.now()-864e5));
+  if(g.last!==t){ g.streak = (g.last===y) ? g.streak+1 : 1; g.last=t; }
+  g.xp += addXp; g.day[t]=(g.day[t]||0)+addXp;
+  const keys=Object.keys(g.day).sort(); while(keys.length>30) delete g.day[keys.shift()];
+  LS.set(K.game,g); return g;
+}
+const streakNow = g => (g.last===dayKey()||g.last===dayKey(new Date(Date.now()-864e5))) ? g.streak : 0;
+
+/* ---------- Helpers ---------- */
+const $ = s => document.querySelector(s);
+const view=$('#view'), lessonEl=$('#lesson');
+const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const icons = () => { try{ window.lucide && lucide.createIcons(); }catch{} };
+const ic = (n,extra='') => `<i data-lucide="${n}" ${extra}></i>`;
+
+function parse(text){
+  const out=[]; let last=0, i=0, m; const re=/\[\[(.+?)\]\]/g;
+  while((m=re.exec(text))){ if(m.index>last) out.push({t:'text',v:text.slice(last,m.index)}); out.push({t:'mark',v:m[1],i:i++}); last=re.lastIndex; }
+  if(last<text.length) out.push({t:'text',v:text.slice(last)});
+  return out;
+}
+const markList = p => parse(p.text).filter(t=>t.t==='mark').map(t=>t.v);
+const paragraphWith = (p,reps) => parse(p.text).map(t=>t.t==='text'?t.v:(reps[t.i]||t.v)).join('');
+function sentenceFor(p, idx, fill, reps){
+  const parts = parse(p.text).map(t=>{
+    if(t.t==='text') return t.v;
+    if(t.i===idx) return '\u0001'+fill+'\u0002';
+    return reps[t.i]||t.v;
+  });
+  const sents = parts.join('').split(/(?<=[.!?])\s+/);
+  const s = sents.find(x=>x.includes('\u0001')) || sents.join(' ');
+  return s.replace(/[\u0001\u0002]/g,'');
+}
+
+/* ---------- Sound ---------- */
+let actx=null;
+function tone(freqs,dur=0.11,type='sine'){
+  if(G().muted) return;
+  try{
+    actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+    freqs.forEach((f,k)=>{
+      const o=actx.createOscillator(), g=actx.createGain(), t=actx.currentTime+k*dur;
+      o.type=type; o.frequency.value=f;
+      g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.16,t+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+dur*1.7);
+      o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t+dur*1.8);
+    });
+  }catch{}
+}
+const sfx = {ok:()=>tone([660,880]), mid:()=>tone([520,440]), bad:()=>tone([200,150],0.14,'triangle'), win:()=>tone([523,659,784,1047],0.13)};
+function confetti(){
+  if(matchMedia('(prefers-reduced-motion:reduce)').matches) return;
+  const box=$('#confetti'), cols=['#58cc02','#1cb0f6','#ffc800','#ff9600','#ce82ff','#ff4b4b'];
+  box.innerHTML=Array.from({length:70},()=>`<i style="left:${Math.random()*100}%;background:${cols[Math.random()*cols.length|0]};animation-duration:${1.8+Math.random()*1.6}s;animation-delay:${Math.random()*.5}s;transform:rotate(${Math.random()*360}deg)"></i>`).join('');
+  setTimeout(()=>box.innerHTML='',4000);
+}
+
+/* ---------- Gemini ---------- */
+async function gemini(prompt){
+  const s = getSettings();
+  if(!s.key){ openSettings(); throw new Error('Add your Gemini API key in Settings first.'); }
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(s.model||DEFAULT_MODEL)}:generateContent`;
+  let res;
+  try{
+    res = await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':s.key},
+      body:JSON.stringify({contents:[{role:'user',parts:[{text:prompt}]}],generationConfig:{temperature:0.3,responseMimeType:'application/json'}})});
+  }catch{ throw new Error('Could not reach Gemini. Check your internet connection.'); }
+  if(!res.ok){
+    let m=''; try{ m=(await res.json()).error?.message||'' }catch{}
+    if(res.status===429) throw new Error('Rate limit reached. Wait a minute and try again.');
+    if(res.status===400 && /api key/i.test(m)) throw new Error('Gemini rejected the API key. Check it in Settings.');
+    throw new Error(m||('Gemini request failed ('+res.status+').'));
+  }
+  const data = await res.json();
+  const txt = (data.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('').trim()
+    .replace(/^```(?:json)?/i,'').replace(/```$/,'').trim();
+  try{ return JSON.parse(txt); }catch{ throw new Error('Gemini returned an unreadable answer. Try again.'); }
+}
+function gradePrompt(p, reps, items){
+  return `You are a strict but fair English writing coach for a Bangladeshi student preparing for IELTS (target band 7+) and for university admission essays (Dhaka University and private universities).
+
+The student received a paragraph in deliberately basic English and must replace marked basic words/phrases with better, more advanced but natural ones.
+
+Judge each replacement IN CONTEXT: meaning, grammar after the swap (part of speech, tense, agreement, articles, prepositions), collocation, formal academic register, and naturalness.
+
+Verdicts:
+- "strong": accurate, natural, and clearly more advanced than the original
+- "acceptable": correct, but only slightly better, generic, or a little unnatural
+- "weak": understandable but wrong collocation, tone or nuance, or not really an upgrade
+- "incorrect": changes the meaning or creates a grammar error
+
+Do not reward rare words that are misused. If the student's choice is as good as your suggestions, say so. Keep each explanation to one or two short sentences. Return exactly one entry per replacement id.
+
+Paragraph with the student's replacements applied:
+"""${paragraphWith(p,reps)}"""
+
+Replacements to judge:
+${JSON.stringify(items)}
+
+Return ONLY valid JSON in exactly this shape:
+{"items":[{"id":0,"verdict":"strong|acceptable|weak|incorrect","reason":"...","better":["alt1","alt2"],"fixed_sentence":"full corrected sentence if weak or incorrect, otherwise empty string"}],"flow":"1-2 sentences on whether the whole paragraph reads naturally and consistently, mentioning any clashes or repetition between the chosen words"}`;
+}
+
+/* ---------- Top bar & Home ---------- */
+function renderTop(){
+  const g=G(), s=streakNow(g), lvl=Math.floor(g.xp/XP_PER_LEVEL)+1;
+  $('#topbar').innerHTML = `
+    <div class="stats">
+      <span class="stat streak ${s?'':'off'}" title="Day streak">${ic('flame')}${s}</span>
+      <span class="stat xp" title="Total XP">${ic('zap')}${g.xp}</span>
+      <span class="stat lvl" title="Level">${ic('shield')}${lvl}</span>
+    </div>
+    <div class="tools">
+      <button class="icon-btn" data-act="mute" title="Sound">${ic(g.muted?'volume-x':'volume-2')}</button>
+      <button class="icon-btn" data-act="export" title="Export upgrades for Anki">${ic('download')}</button>
+      <button class="icon-btn" data-act="settings" title="Settings">${ic('settings')}</button>
+    </div>`;
+}
+function renderHome(){
+  L=null; lessonEl.hidden=true; lessonEl.innerHTML=''; document.body.style.overflow='';
+  renderTop();
+  const g=G(), today=g.day[dayKey()]||0, into=g.xp%XP_PER_LEVEL, lvl=Math.floor(g.xp/XP_PER_LEVEL)+1;
+  const pass=allPassages().map(p=>({...p,unit:p.custom?'Mine':p.tag}));
+  const next=pass.find(p=>!p.custom && !(g.stars[p.id]>0));
+  let html=`<div class="goal">
+    <div class="gr"><b>Daily goal</b><span>${Math.min(today,DAILY_GOAL)} / ${DAILY_GOAL} XP</span></div>
+    <div class="bar"><i style="width:${Math.min(100,today/DAILY_GOAL*100)}%"></i></div>
+    <div class="gr"><b>Level ${lvl}</b><span>${into} / ${XP_PER_LEVEL} XP</span></div>
+    <div class="bar purple"><i style="width:${into/XP_PER_LEVEL*100}%"></i></div></div>`;
+  for(const u of UNITS){
+    const list=pass.filter(p=>p.unit===u.key);
+    const done=list.filter(p=>g.stars[p.id]>0).length;
+    html+=`<div class="unit ${u.key}"><div><small>${esc(u.desc)}</small><h2>${esc(u.name)}</h2></div><span class="cnt">${done}/${list.length}</span></div>`;
+    const offs=[0,38,64,38,0,-38,-64,-38];
+    const drafts=LS.get(DRAFT,{});
+    list.forEach((p,k)=>{
+      const st=g.stars[p.id]||0, isNext=next&&next.id===p.id;
+      html+=`<div class="node" style="--x:${offs[k%offs.length]}px">
+        ${isNext?'<div class="bubble">START</div>':''}
+        <button class="circle ${st?'done':''}" data-act="start" data-id="${esc(p.id)}" aria-label="Start ${esc(p.title)}">${ic(st?'check':'star')}</button>
+        <div class="lbl">${esc(p.title)}</div>
+        ${drafts[p.id]?'<div class="resume">In progress</div>':''}
+        <div class="stars">${[1,2,3].map(n=>`<span class="${n<=st?'on':''}">${ic('star')}</span>`).join('')}</div>
+        ${p.custom?`<button class="icon-btn rm" data-act="del" data-id="${esc(p.id)}" title="Delete">${ic('trash-2')}</button>`:''}
+      </div>`;
+    });
+    if(u.key==='Mine') html+=`<div class="node" style="--x:0px"><button class="circle add" data-act="new" aria-label="New paragraph">${ic('plus')}</button><div class="lbl">New paragraph</div></div>`;
+  }
+  html+=`<p class="hint">Answer every highlighted word, then check them all at once. Your progress is saved on this device.</p>`;
+  view.innerHTML=html; icons();
+}
+
+/* ---------- Lesson ---------- */
+let L=null;
+const DRAFT='wu.draft.v1';
+function saveDraft(){
+  if(!L) return;
+  const d=LS.get(DRAFT,{});
+  if(L.phase==='done') delete d[L.p.id];
+  else d[L.p.id]={reps:L.reps,fin:L.fin,fb:L.fb,first:L.first,xp:L.xp,phase:L.phase,round:L.round,flow:L.flow,prev:L.prev,gain:L.gain,dayStart:L.dayStart};
+  LS.set(DRAFT,d);
+}
+const allIdx = () => L.marks.map((_,i)=>i);
+const failedList = () => allIdx().filter(i=>L.fin[i]==='weak'||L.fin[i]==='incorrect');
+const editable = () => L.round===1 ? allIdx() : failedList().filter(i=>L.prev[i]!==undefined);
+const val = i => (L.reps[i]||'').trim();
+const answeredCount = () => editable().filter(i=>val(i)).length;
+
+function startLesson(pid,fresh){
+  const p=allPassages().find(x=>x.id===pid); if(!p) return;
+  const marks=markList(p), g=G(), d=!fresh && LS.get(DRAFT,{})[pid];
+  L={p,marks,reps:{},fin:{},fb:{},first:{},xp:0,phase:'answer',round:1,flow:'',prev:{},gain:0,busy:false,error:'',dayStart:g.day[dayKey()]||0};
+  if(d) Object.assign(L,{reps:d.reps||{},fin:d.fin||{},fb:d.fb||{},first:d.first||{},xp:d.xp||0,phase:d.phase||'answer',round:d.round||1,flow:d.flow||'',prev:d.prev||{},gain:d.gain||0,dayStart:d.dayStart??L.dayStart});
+  if(L.phase==='done') L.phase='answer';
+  lessonEl.hidden=false; document.body.style.overflow='hidden';
+  renderLesson();
+}
+function paraHTML(chips){
+  const ed=chips?editable():[];
+  return parse(L.p.text).map(t=>{
+    if(t.t==='text') return esc(t.v);
+    const i=t.i;
+    if(ed.includes(i)) return `<button class="chip ${val(i)?'filled':''}" data-lact="focus" data-i="${i}">${esc(val(i)||t.v)}</button>`;
+    const f=L.fin[i];
+    if(f&&f!=='skipped'&&L.reps[i]) return `<span class="done v-${f}">${esc(L.reps[i])}</span>`;
+    return `<span class="fut">${esc(t.v)}</span>`;
+  }).join('');
+}
+function renderLesson(){
+  if(!L) return;
+  if(L.phase==='done') return renderDone();
+  if(L.phase==='review') return renderReview();
+  const ed=editable(), n=answeredCount(), pct=Math.round(n/ed.length*100), dis=L.busy?'disabled':'';
+  const rows=ed.map(i=>`<div class="inrow"><span class="orig">${esc(L.marks[i])}</span>
+      <input class="rowin" id="in-${i}" data-i="${i}" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"
+        placeholder="${L.round===2?'A stronger word':'Your upgrade'}" value="${esc(L.reps[i]||'')}" ${dis} aria-label="Replace ${esc(L.marks[i])}">
+      ${L.round===2&&L.prev[i]?`<div class="why">Last try “${esc(L.prev[i])}”: ${esc(L.fb[i]?.reason||'')}</div>`:''}</div>`).join('');
+  lessonEl.innerHTML=`
+    <div class="l-top"><button class="icon-btn" data-lact="quit" aria-label="Leave lesson">${ic('x')}</button>
+      <div class="bar green pbar"><i id="pfill" style="width:${pct}%"></i></div><div class="counter" id="cnt">${n}/${ed.length}</div></div>
+    <div class="l-body">
+      <h2 class="ask">${L.round===1?'Upgrade every highlighted word':'Fix these words'}</h2>
+      <p class="sub2">${L.round===1?'Answer as many as you like, then check them all in one go.':'Second try. Half XP, but it still counts.'}</p>
+      <div class="para-l">${paraHTML(true)}</div>
+      ${rows}
+      ${L.error?`<div class="errtxt" role="alert">${esc(L.error)}</div>`:''}
+    </div>
+    <div class="l-foot"><div class="in"><button class="btn3d block" id="btn-check" data-lact="check" ${(!n||L.busy)?'disabled':''}>${L.busy?'<span class="spin"></span>Checking':'Check answers'}</button></div></div>`;
+  icons();
+  if(!L.busy){ const f=ed.find(i=>!val(i)); const el=document.getElementById('in-'+(f??ed[0])); if(el) el.focus(); }
+}
+function refreshLive(i){
+  const c=document.querySelector(`.chip[data-i="${i}"]`);
+  if(c){ c.textContent=val(i)||L.marks[i]; c.classList.toggle('filled',!!val(i)); }
+  const ed=editable(), n=answeredCount();
+  const pf=$('#pfill'); if(pf) pf.style.width=Math.round(n/ed.length*100)+'%';
+  const cn=$('#cnt'); if(cn) cn.textContent=n+'/'+ed.length;
+  const b=$('#btn-check'); if(b) b.disabled=!n||L.busy;
+  const er=document.querySelector('.errtxt'); if(er) er.remove();
+}
+async function checkAnswers(){
+  if(!L||L.phase!=='answer'||L.busy) return;
+  const ed=editable();
+  ed.forEach(i=>{ const v=val(i); if(!v||v.toLowerCase()===L.marks[i].toLowerCase()) delete L.reps[i]; else L.reps[i]=v; });
+  const fresh=ed.filter(i=>L.reps[i]);
+  if(!fresh.length){ L.error='Write at least one different word first.'; renderLesson(); return; }
+  const ctx={...L.reps}; ed.forEach(i=>{ if(!ctx[i]&&L.prev[i]) ctx[i]=L.prev[i]; });
+  const items=fresh.map(i=>({id:i,original:L.marks[i],replacement:L.reps[i],sentence:sentenceFor(L.p,i,L.reps[i],ctx)}));
+  L.busy=true; L.error=''; saveDraft(); renderLesson();
+  let out;
+  try{ out=await gemini(gradePrompt(L.p,ctx,items)); }
+  catch(e){ L.busy=false; L.error=e.message||String(e); renderLesson(); return; }
+  const got=Array.isArray(out.items)?out.items:[]; let gain=0;
+  fresh.forEach(i=>{
+    const r=got.find(x=>Number(x.id)===i)||{};
+    const v=XP_BASE.hasOwnProperty(r.verdict)?r.verdict:'weak';
+    const xp=L.round===2?Math.floor(XP_BASE[v]/2):XP_BASE[v];
+    L.fb[i]={verdict:v,reason:String(r.reason||'No explanation returned.'),better:(Array.isArray(r.better)?r.better:[]).slice(0,4).map(String),fixed:String(r.fixed_sentence||''),xp};
+    L.fin[i]=v; if(L.round===1) L.first[i]=v; gain+=xp;
+  });
+  ed.filter(i=>!fresh.includes(i)).forEach(i=>{
+    if(L.round===1){ L.fin[i]='skipped'; L.first[i]='skipped'; delete L.fb[i]; }
+    else L.reps[i]=L.prev[i];
+  });
+  fresh.forEach(i=>{ const f=L.fb[i]; if(f.verdict==='strong'||f.verdict==='acceptable') logUpgrade(i,L.reps[i],f); });
+  L.xp+=gain; L.gain=gain; if(typeof out.flow==='string') L.flow=out.flow;
+  touchGame(gain);
+  const vs=fresh.map(i=>L.fb[i].verdict);
+  (vs.includes('incorrect')?sfx.bad:vs.includes('weak')?sfx.mid:sfx.ok)();
+  L.busy=false; L.phase='review'; saveDraft(); renderLesson(); renderTop(); icons();
+}
+function renderReview(){
+  const shown=allIdx().filter(i=>L.fb[i]&&L.reps[i]);
+  const counts={}; shown.forEach(i=>{const v=L.fb[i].verdict; counts[v]=(counts[v]||0)+1});
+  const failed=failedList();
+  const cards=shown.map(i=>{ const f=L.fb[i]; return `<article class="fbk v-${f.verdict}">
+      <div class="h"><span><s>${esc(L.marks[i])}</s><b>${esc(L.reps[i])}</b></span><span class="pill v-${f.verdict}">${f.verdict}</span></div>
+      <p>${esc(f.reason)}</p>
+      ${f.better.length?`<p><span class="lab">Also try</span>${f.better.map(b=>`<code>${esc(b)}</code>`).join('')}</p>`:''}
+      ${f.fixed?`<p><span class="lab">Corrected</span>${esc(f.fixed)}</p>`:''}</article>`; }).join('');
+  const canFix=L.round===1&&failed.length>0;
+  lessonEl.innerHTML=`
+    <div class="l-top"><button class="icon-btn" data-lact="quit" aria-label="Leave lesson">${ic('x')}</button>
+      <div class="bar green pbar"><i style="width:100%"></i></div><div class="counter">${shown.length}/${L.marks.length}</div></div>
+    <div class="l-body">
+      <h2 class="ask">Results <span class="xpchip lg">${ic('zap')}+${L.gain} XP</span></h2>
+      <div class="para-l">${paraHTML(false)}</div>
+      <div class="tally">${['strong','acceptable','weak','incorrect'].filter(v=>counts[v]).map(v=>`<span class="pill v-${v}">${counts[v]} ${v}</span>`).join('')}</div>
+      ${cards}
+      ${L.flow?`<div class="panel"><h4>Overall flow</h4>${esc(L.flow)}</div>`:''}
+    </div>
+    <div class="l-foot"><div class="in">${canFix
+      ?`<button class="btn3d ghost gray" data-lact="finish">Finish</button><button class="btn3d orange" data-lact="fix">Fix ${failed.length} word${failed.length>1?'s':''}</button>`
+      :`<button class="btn3d block" data-lact="finish">Finish</button>`}</div></div>`;
+  icons();
+  const b=lessonEl.querySelector('.l-body'); if(b) b.scrollTop=0;
+}
+function startRound2(){
+  failedList().forEach(i=>{ L.prev[i]=L.reps[i]; delete L.reps[i]; });
+  L.round=2; L.phase='answer'; L.error=''; saveDraft(); renderLesson();
+}
+function finishLesson(){
+  const n=L.marks.length, firstGood=Object.values(L.first).filter(v=>v==='strong'||v==='acceptable').length;
+  L.acc=Math.round(firstGood/n*100);
+  L.stars=L.acc>=90?3:L.acc>=60?2:1;
+  L.bonus=firstGood===n?10:0; L.xp+=L.bonus;
+  const g=touchGame(L.bonus);
+  g.stars[L.p.id]=Math.max(g.stars[L.p.id]||0,L.stars); LS.set(K.game,g);
+  L.goalHit=L.dayStart<DAILY_GOAL && (g.day[dayKey()]||0)>=DAILY_GOAL;
+  L.phase='done'; saveDraft(); sfx.win(); confetti(); renderLesson(); renderTop(); icons();
+}
+function renderDone(){
+  const g=G();
+  const rows=allIdx().map(i=>{
+    const v=L.fin[i]; if(!v) return '';
+    return `<div class="row"><div class="sw"><s>${esc(L.marks[i])}</s>${v==='skipped'?'<span style="color:var(--muted)">skipped</span>':`<b>${esc(L.reps[i])}</b>`}</div><span class="pill v-${v}">${v==='skipped'?'Skipped':v}</span></div>`;
+  }).join('');
+  lessonEl.innerHTML=`<div class="l-body"><div class="fin">
+    <div class="trophy">${ic('trophy')}</div>
+    <h1>Lesson complete!</h1>
+    <p class="sub">${esc(L.p.title)}</p>
+    <div class="bigstars">${[1,2,3].map(n=>`<span>${ic('star',`class="${n<=L.stars?'on':''}"`)}</span>`).join('')}</div>
+    <div class="tiles">
+      <div class="tile"><div class="h">Total XP</div><div class="v">${ic('zap')}${L.xp}</div></div>
+      <div class="tile g"><div class="h">First-try</div><div class="v">${L.acc}%</div></div>
+      <div class="tile b"><div class="h">Streak</div><div class="v">${ic('flame')}${streakNow(g)}</div></div>
+    </div>
+    ${L.bonus?`<div class="panel goalhit">${ic('sparkles')}Perfect lesson bonus: +${L.bonus} XP</div>`:''}
+    ${L.goalHit?`<div class="panel goalhit">${ic('target')}Daily goal reached!</div>`:''}
+    <div class="panel"><h4>Your upgrades</h4>${rows}</div>
+    ${L.flow?`<div class="panel"><h4>Overall flow</h4>${esc(L.flow)}</div>`:''}
+    <div class="fin-actions">
+      <button class="btn3d block" data-lact="home">Continue</button>
+      <button class="btn3d block ghost" data-lact="again">Practice again</button>
+    </div></div></div>`;
+}
+function logUpgrade(i,rep,f){
+  const up=LS.get(K.up,[]), key=L.p.id+':'+i+':'+rep.toLowerCase();
+  if(up.some(u=>u.key===key)) return;
+  up.push({key,original:L.marks[i],rep,blank:sentenceFor(L.p,i,'_____',L.reps),full:sentenceFor(L.p,i,rep,L.reps),better:f.better||[],t:Date.now()});
+  LS.set(K.up,up);
+}
+
+/* ---------- Settings, new paragraph, export ---------- */
+const dlgS=$('#dlg-settings'), dlgN=$('#dlg-new');
+function openSettings(){ const s=getSettings(); $('#s-key').value=s.key; $('#s-model').value=s.model; dlgS.showModal(); }
+$('#f-settings').addEventListener('submit',e=>{
+  if(e.submitter && e.submitter.value==='save') LS.set(K.settings,{key:$('#s-key').value.trim(),model:$('#s-model').value.trim()||DEFAULT_MODEL});
+});
+const nerr = msg => { $('#n-err').innerHTML = msg?`<div class="err" role="alert">${esc(msg)}</div>`:''; };
+function addCustom(title,tag,text){ const c=customList(); const p={id:'c'+Date.now(),tag,title,text,custom:true}; c.push(p); LS.set(K.custom,c); return p; }
+$('#n-gen').onclick=async()=>{
+  const topic=$('#n-topic').value.trim(); if(!topic){ nerr('Enter a topic first.'); return; }
+  const btn=$('#n-gen'); btn.disabled=true; nerr('');
+  try{
+    const out=await gemini(`Write a 70-90 word paragraph on the topic "${topic}" for ${$('#n-tag').value} writing practice (a Bangladeshi student preparing for IELTS and university admission). Use deliberately BASIC English (good, bad, big, many, a lot of, make, get, help, important, very ...), grammatically correct. Wrap 6-8 basic words or short phrases that the student should upgrade in double square brackets, like [[big]]. Return ONLY JSON: {"title":"short title","text":"paragraph with [[marks]]"}`);
+    if(!out.text || !/\[\[.+?\]\]/.test(out.text)) throw new Error('Gemini did not mark any words. Try again.');
+    const p=addCustom(String(out.title||topic),$('#n-tag').value,String(out.text));
+    dlgN.close(); renderHome(); startLesson(p.id);
+  }catch(e){ nerr(e.message); }
+  btn.disabled=false;
+};
+$('#n-save').onclick=()=>{
+  const title=$('#n-title').value.trim()||'My paragraph', text=$('#n-text').value.trim();
+  if(!/\[\[.+?\]\]/.test(text)){ nerr('Wrap at least one word in [[double brackets]].'); return; }
+  const p=addCustom(title,$('#n-tag').value,text); dlgN.close(); renderHome(); startLesson(p.id);
+};
+$('#f-new').addEventListener('submit',e=>{ if(!e.submitter||e.submitter.value!=='cancel') e.preventDefault(); });
+const csvField = s => '"'+String(s).replace(/"/g,'""').replace(/\r?\n/g,' ')+'"';
+function exportUpgrades(){
+  const up=LS.get(K.up,[]);
+  if(!up.length){ alert('No upgrades saved yet. Strong and acceptable answers are added here automatically.'); return; }
+  const rows=up.map(u=>[`Upgrade “${u.original}” in: ${u.blank}`, `${u.rep}${u.better.length?' | also: '+u.better.join(', '):''} | ${u.full}`].map(csvField).join('\t'));
+  const blob=new Blob([rows.join('\n')],{type:'text/tab-separated-values'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='word-upgrades.tsv'; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+
+/* ---------- Backup ---------- */
+const BACKUP_KEYS=[K.game,K.custom,K.up,DRAFT];
+$('#b-exp').onclick=()=>{
+  const data={app:'word-upgrade',v:1,t:Date.now()}; BACKUP_KEYS.forEach(k=>data[k]=LS.get(k,null));
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(data)],{type:'application/json'}));
+  a.download='word-upgrade-backup-'+dayKey()+'.json'; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+};
+$('#b-imp').onclick=()=>$('#b-file').click();
+$('#b-file').onchange=async e=>{
+  const f=e.target.files[0]; if(!f) return;
+  try{
+    const d=JSON.parse(await f.text()); if(d.app!=='word-upgrade') throw 0;
+    if(!confirm('Replace the progress on this device with this backup?')){ e.target.value=''; return; }
+    BACKUP_KEYS.forEach(k=>{ if(d[k]!=null) LS.set(k,d[k]); });
+    dlgS.close(); renderHome();
+  }catch{ alert('That file is not a valid Word Upgrade backup.'); }
+  e.target.value='';
+};
+try{ navigator.storage && navigator.storage.persist && navigator.storage.persist(); }catch{}
+
+/* ---------- Events ---------- */
+document.addEventListener('click',e=>{
+  const el=e.target.closest('[data-act],[data-lact]'); if(!el) return;
+  const a=el.dataset.act, l=el.dataset.lact;
+  if(a==='start') startLesson(el.dataset.id);
+  else if(a==='new'){ nerr(''); dlgN.showModal(); icons(); }
+  else if(a==='settings') openSettings();
+  else if(a==='export') exportUpgrades();
+  else if(a==='mute'){ const g=G(); g.muted=!g.muted; LS.set(K.game,g); renderTop(); icons(); }
+  else if(a==='del'){ if(confirm('Delete this paragraph?')){ LS.set(K.custom,customList().filter(p=>p.id!==el.dataset.id)); renderHome(); } }
+  else if(l==='check') checkAnswers();
+  else if(l==='focus'){ const x=document.getElementById('in-'+el.dataset.i); if(x) x.focus(); }
+  else if(l==='fix') startRound2();
+  else if(l==='finish') finishLesson();
+  else if(l==='quit'){ if(confirm('Leave this lesson? Your answers are saved on this device.')){ saveDraft(); renderHome(); } }
+  else if(l==='home') renderHome();
+  else if(l==='again') startLesson(L.p.id,true);
+});
+document.addEventListener('input',e=>{
+  const t=e.target; if(!L||!t.classList||!t.classList.contains('rowin')) return;
+  const i=+t.dataset.i; if(t.value.trim()) L.reps[i]=t.value; else delete L.reps[i];
+  L.error=''; refreshLive(i); saveDraft();
+});
+document.addEventListener('focusin',e=>{
+  const t=e.target; if(!t.classList||!t.classList.contains('rowin')) return;
+  document.querySelectorAll('.chip.on').forEach(c=>c.classList.remove('on'));
+  const c=document.querySelector(`.chip[data-i="${t.dataset.i}"]`); if(c) c.classList.add('on');
+});
+document.addEventListener('keydown',e=>{
+  const t=e.target; if(!L||e.key!=='Enter'||e.isComposing||!t.classList||!t.classList.contains('rowin')) return;
+  e.preventDefault();
+  const ed=editable(), k=ed.indexOf(+t.dataset.i), nx=ed[k+1];
+  if(nx!==undefined) document.getElementById('in-'+nx).focus();
+  else if(answeredCount()) checkAnswers();
+});
+
+renderHome();
+</script>
+</body>
+</html>
