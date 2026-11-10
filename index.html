@@ -31,6 +31,19 @@
     --off:#37464f; --off-t:#5b6d76;
   }
 }
+:root[data-theme="light"]{
+  --bg:#ffffff; --surface:#ffffff; --ink:#4b4b4b; --ink-strong:#3c3c3c; --muted:#8e8e8e; --line:#e5e5e5; --line-d:#cfcfcf;
+  --green-bg:#d7ffb8; --green-t:#46a302; --blue-bg:#ddf4ff; --red-bg:#ffdfe0; --orange-bg:#fff0d0; --off:#e5e5e5; --off-t:#afafaf;
+}
+:root[data-theme="dark"]{
+  --bg:#131f24; --surface:#131f24; --ink:#dce6ec; --ink-strong:#f1f7fb; --muted:#7b8f98; --line:#37464f; --line-d:#4a5b64;
+  --green-bg:#24380f; --green-t:#7ddc2a; --blue-bg:#14323f; --red-bg:#3d1f21; --orange-bg:#3d2d10; --off:#37464f; --off-t:#5b6d76;
+}
+:root[data-theme="black"]{
+  color-scheme:dark;
+  --bg:#000000; --surface:#000000; --ink:#e6e6e6; --ink-strong:#ffffff; --muted:#8a8a8a; --line:#292929; --line-d:#444444;
+  --green-bg:#123000; --green-t:#7ee52c; --blue-bg:#06283a; --red-bg:#3a1010; --orange-bg:#3b2500; --off:#292929; --off-t:#777777;
+}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font:700 16px/1.5 var(--font)}
@@ -253,6 +266,13 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
   <label for="s-model">Model</label>
   <input id="s-model" type="text" placeholder="gemini-2.5-flash">
   <p class="note">If a model name stops working, paste a current one from AI Studio.</p>
+  <label for="s-theme">Theme</label>
+  <select id="s-theme">
+    <option value="system">System default</option>
+    <option value="light">Light</option>
+    <option value="dark">Dark</option>
+    <option value="black">Pure black</option>
+  </select>
   <label>Backup</label>
   <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn3d ghost" type="button" id="b-exp">Download backup</button><button class="btn3d ghost" type="button" id="b-imp">Restore backup</button></div>
   <p class="note">Saves XP, streak, stars, your paragraphs and upgrades (not your API key). Use it before clearing browser data or switching device.</p>
@@ -311,7 +331,11 @@ const LS = {
 };
 const K = {settings:'wu.settings.v1', custom:'wu.custom.v1', up:'wu.upgrades.v1', game:'wu.game.v2'};
 const DEFAULT_MODEL = 'gemini-2.5-flash';
-const getSettings = () => Object.assign({key:'',model:DEFAULT_MODEL}, LS.get(K.settings,{}));
+const getSettings = () => Object.assign({key:'',model:DEFAULT_MODEL,theme:'system'}, LS.get(K.settings,{}));
+function applyTheme(theme=getSettings().theme){
+  document.documentElement.dataset.theme=theme==='system'?'':theme;
+}
+applyTheme();
 const customList = () => LS.get(K.custom,[]);
 const allPassages = () => [...PASSAGES, ...customList()];
 const dayKey = (d=new Date()) => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
@@ -654,9 +678,12 @@ function logUpgrade(i,rep,f){
 
 /* ---------- Settings, new paragraph, export ---------- */
 const dlgS=$('#dlg-settings'), dlgN=$('#dlg-new');
-function openSettings(){ const s=getSettings(); $('#s-key').value=s.key; $('#s-model').value=s.model; dlgS.showModal(); }
+function openSettings(){ const s=getSettings(); $('#s-key').value=s.key; $('#s-model').value=s.model; $('#s-theme').value=s.theme; dlgS.showModal(); }
 $('#f-settings').addEventListener('submit',e=>{
-  if(e.submitter && e.submitter.value==='save') LS.set(K.settings,{key:$('#s-key').value.trim(),model:$('#s-model').value.trim()||DEFAULT_MODEL});
+  if(e.submitter && e.submitter.value==='save'){
+    const settings={key:$('#s-key').value.trim(),model:$('#s-model').value.trim()||DEFAULT_MODEL,theme:$('#s-theme').value};
+    LS.set(K.settings,settings); applyTheme(settings.theme);
+  }
 });
 const nerr = msg => { $('#n-err').innerHTML = msg?`<div class="err" role="alert">${esc(msg)}</div>`:''; };
 function addCustom(title,tag,text){ const c=customList(); const p={id:'c'+Date.now(),tag,title,text,custom:true}; c.push(p); LS.set(K.custom,c); return p; }
