@@ -461,7 +461,7 @@ function renderHome(){
     });
     if(u.key==='Mine') html+=`<div class="node" style="--x:0px"><button class="circle add" data-act="new" aria-label="New paragraph">${ic('plus')}</button><div class="lbl">New paragraph</div></div>`;
   }
-  html+=`<p class="hint">Answer every highlighted word, then check them all at once. Your progress is saved on this device.</p>`;
+  html+=`<p class="hint">Practice one highlighted word at a time. Select a word in the paragraph or use Next word.</p>`;
   view.innerHTML=html; icons();
 }
 
@@ -472,7 +472,7 @@ function saveDraft(){
   if(!L) return;
   const d=LS.get(DRAFT,{});
   if(L.phase==='done') delete d[L.p.id];
-  else d[L.p.id]={reps:L.reps,fin:L.fin,fb:L.fb,first:L.first,xp:L.xp,phase:L.phase,round:L.round,flow:L.flow,prev:L.prev,gain:L.gain,dayStart:L.dayStart};
+  else d[L.p.id]={reps:L.reps,fin:L.fin,fb:L.fb,first:L.first,xp:L.xp,phase:L.phase,round:L.round,active:L.active,flow:L.flow,prev:L.prev,gain:L.gain,dayStart:L.dayStart};
   LS.set(DRAFT,d);
 }
 const allIdx = () => L.marks.map((_,i)=>i);
@@ -484,8 +484,10 @@ const answeredCount = () => editable().filter(i=>val(i)).length;
 function startLesson(pid,fresh){
   const p=allPassages().find(x=>x.id===pid); if(!p) return;
   const marks=markList(p), g=G(), d=!fresh && LS.get(DRAFT,{})[pid];
-  L={p,marks,reps:{},fin:{},fb:{},first:{},xp:0,phase:'answer',round:1,flow:'',prev:{},gain:0,busy:false,error:'',dayStart:g.day[dayKey()]||0};
-  if(d) Object.assign(L,{reps:d.reps||{},fin:d.fin||{},fb:d.fb||{},first:d.first||{},xp:d.xp||0,phase:d.phase||'answer',round:d.round||1,flow:d.flow||'',prev:d.prev||{},gain:d.gain||0,dayStart:d.dayStart??L.dayStart});
+  L={p,marks,reps:{},fin:{},fb:{},first:{},xp:0,phase:'answer',round:1,active:0,flow:'',prev:{},gain:0,busy:false,error:'',dayStart:g.day[dayKey()]||0};
+  if(d) Object.assign(L,{reps:d.reps||{},fin:d.fin||{},fb:d.fb||{},first:d.first||{},xp:d.xp||0,phase:d.phase||'answer',round:d.round||1,active:d.active??0,flow:d.flow||'',prev:d.prev||{},gain:d.gain||0,dayStart:d.dayStart??L.dayStart});
+  const firstEditable=editable()[0];
+  if(!editable().includes(L.active)) L.active=firstEditable??0;
   if(L.phase==='done') L.phase='answer';
   lessonEl.hidden=false; document.body.style.overflow='hidden';
   renderLesson();
@@ -495,7 +497,7 @@ function paraHTML(chips){
   return parse(L.p.text).map(t=>{
     if(t.t==='text') return esc(t.v);
     const i=t.i;
-    if(ed.includes(i)) return `<button class="chip ${val(i)?'filled':''}" data-lact="focus" data-i="${i}">${esc(val(i)||t.v)}</button>`;
+    if(ed.includes(i)) return `<button class="chip ${val(i)?'filled':''} ${L.active===i?'on':''}" data-lact="focus" data-i="${i}">${esc(val(i)||t.v)}</button>`;
     const f=L.fin[i];
     if(f&&f!=='skipped'&&L.reps[i]) return `<span class="done v-${f}">${esc(L.reps[i])}</span>`;
     return `<span class="fut">${esc(t.v)}</span>`;
@@ -505,22 +507,26 @@ function renderLesson(){
   if(!L) return;
   if(L.phase==='done') return renderDone();
   if(L.phase==='review') return renderReview();
-  const ed=editable(), n=answeredCount(), pct=Math.round(n/ed.length*100), dis=L.busy?'disabled':'';
-  const rows=ed.map(i=>`<div class="inrow"><span class="orig">${esc(L.marks[i])}</span>
+  const ed=editable(), n=answeredCount(), pos=Math.max(0,ed.indexOf(L.active)), pct=Math.round((pos+1)/ed.length*100), dis=L.busy?'disabled':'';
+  const i=L.active;
+  const row=`<div class="inrow"><span class="orig">${esc(L.marks[i])}</span>
       <input class="rowin" id="in-${i}" data-i="${i}" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"
         placeholder="${L.round===2?'A stronger word':'Your upgrade'}" value="${esc(L.reps[i]||'')}" ${dis} aria-label="Replace ${esc(L.marks[i])}">
-      ${L.round===2&&L.prev[i]?`<div class="why">Last try “${esc(L.prev[i])}”: ${esc(L.fb[i]?.reason||'')}</div>`:''}</div>`).join('');
+      ${L.round===2&&L.prev[i]?`<div class="why">Last try “${esc(L.prev[i])}”: ${esc(L.fb[i]?.reason||'')}</div>`:''}</div>`;
   lessonEl.innerHTML=`
     <div class="l-top"><button class="icon-btn" data-lact="quit" aria-label="Leave lesson">${ic('x')}</button>
-      <div class="bar green pbar"><i id="pfill" style="width:${pct}%"></i></div><div class="counter" id="cnt">${n}/${ed.length}</div></div>
+      <div class="bar green pbar"><i id="pfill" style="width:${pct}%"></i></div><div class="counter" id="cnt">${pos+1}/${ed.length}</div></div>
     <div class="l-body">
       <h2 class="ask">${L.round===1?'Upgrade every highlighted word':'Fix these words'}</h2>
-      <p class="sub2">${L.round===1?'Answer as many as you like, then check them all in one go.':'Second try. Half XP, but it still counts.'}</p>
+      <p class="sub2">${L.round===1?'Enter one upgrade, then move to the next word.':'Second try. Half XP, but it still counts.'}</p>
       <div class="para-l">${paraHTML(true)}</div>
-      ${rows}
+      ${row}
       ${L.error?`<div class="errtxt" role="alert">${esc(L.error)}</div>`:''}
     </div>
-    <div class="l-foot"><div class="in"><button class="btn3d block" id="btn-check" data-lact="check" ${(!n||L.busy)?'disabled':''}>${L.busy?'<span class="spin"></span>Checking':'Check answers'}</button></div></div>`;
+    <div class="l-foot"><div class="in">
+      <button class="btn3d ghost" data-lact="next" ${L.busy?'disabled':''}>Next word</button>
+      <button class="btn3d" id="btn-check" data-lact="check" ${(!n||L.busy)?'disabled':''}>${L.busy?'<span class="spin"></span>Checking':'Check answers'}</button>
+    </div></div>`;
   icons();
   if(!L.busy){ const f=ed.find(i=>!val(i)); const el=document.getElementById('in-'+(f??ed[0])); if(el) el.focus(); }
 }
@@ -528,8 +534,9 @@ function refreshLive(i){
   const c=document.querySelector(`.chip[data-i="${i}"]`);
   if(c){ c.textContent=val(i)||L.marks[i]; c.classList.toggle('filled',!!val(i)); }
   const ed=editable(), n=answeredCount();
-  const pf=$('#pfill'); if(pf) pf.style.width=Math.round(n/ed.length*100)+'%';
-  const cn=$('#cnt'); if(cn) cn.textContent=n+'/'+ed.length;
+  const pos=Math.max(0,ed.indexOf(L.active));
+  const pf=$('#pfill'); if(pf) pf.style.width=Math.round((pos+1)/ed.length*100)+'%';
+  const cn=$('#cnt'); if(cn) cn.textContent=(pos+1)+'/'+ed.length;
   const b=$('#btn-check'); if(b) b.disabled=!n||L.busy;
   const er=document.querySelector('.errtxt'); if(er) er.remove();
 }
@@ -592,7 +599,13 @@ function renderReview(){
 }
 function startRound2(){
   failedList().forEach(i=>{ L.prev[i]=L.reps[i]; delete L.reps[i]; });
-  L.round=2; L.phase='answer'; L.error=''; saveDraft(); renderLesson();
+  L.round=2; L.active=failedList()[0]??0; L.phase='answer'; L.error=''; saveDraft(); renderLesson();
+}
+function nextWord(){
+  if(!L||L.phase!=='answer'||L.busy) return;
+  const ed=editable(), pos=ed.indexOf(L.active);
+  L.active=ed[(pos+1)%ed.length]??ed[0];
+  L.error=''; saveDraft(); renderLesson();
 }
 function finishLesson(){
   const n=L.marks.length, firstGood=Object.values(L.first).filter(v=>v==='strong'||v==='acceptable').length;
@@ -702,7 +715,8 @@ document.addEventListener('click',e=>{
   else if(a==='mute'){ const g=G(); g.muted=!g.muted; LS.set(K.game,g); renderTop(); icons(); }
   else if(a==='del'){ if(confirm('Delete this paragraph?')){ LS.set(K.custom,customList().filter(p=>p.id!==el.dataset.id)); renderHome(); } }
   else if(l==='check') checkAnswers();
-  else if(l==='focus'){ const x=document.getElementById('in-'+el.dataset.i); if(x) x.focus(); }
+  else if(l==='focus'){ L.active=+el.dataset.i; saveDraft(); renderLesson(); }
+  else if(l==='next') nextWord();
   else if(l==='fix') startRound2();
   else if(l==='finish') finishLesson();
   else if(l==='quit'){ if(confirm('Leave this lesson? Your answers are saved on this device.')){ saveDraft(); renderHome(); } }
@@ -722,9 +736,7 @@ document.addEventListener('focusin',e=>{
 document.addEventListener('keydown',e=>{
   const t=e.target; if(!L||e.key!=='Enter'||e.isComposing||!t.classList||!t.classList.contains('rowin')) return;
   e.preventDefault();
-  const ed=editable(), k=ed.indexOf(+t.dataset.i), nx=ed[k+1];
-  if(nx!==undefined) document.getElementById('in-'+nx).focus();
-  else if(answeredCount()) checkAnswers();
+  nextWord();
 });
 
 renderHome();
